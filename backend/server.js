@@ -11,23 +11,40 @@ import transcriptRoutes from "./routes/transcriptRoutes.js";
 
 dotenv.config();
 
-const app = express(); // ✅ FIRST create app
+const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup
+
+// ✅ CORS FIX (IMPORTANT FOR NETLIFY + LOCAL)
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://bucolic-llama-bfb205.netlify.app"
+  ],
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
+app.use(express.json());
+
+
+// ✅ SOCKET.IO FIX (PRODUCTION READY)
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://bucolic-llama-bfb205.netlify.app"
+    ],
     methods: ["GET", "POST"]
   }
 });
 
 io.on("connection", (socket) => {
-  console.log("User connected");
+  console.log("🟢 User connected");
 
   socket.on("join-room", (roomId) => {
     socket.join(roomId);
-    console.log(`User joined room: ${roomId}`);
+    console.log(`📌 User joined room: ${roomId}`);
   });
 
   socket.on("send-caption", ({ roomId, text }) => {
@@ -35,24 +52,24 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    console.log("🔴 User disconnected");
   });
 });
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
 
-// Routes ✅ (NOW CORRECT ORDER)
+// ✅ ROUTES
 app.use("/api/ai", aiRoutes);
 app.use("/api/transcripts", transcriptRoutes);
 app.use("/api/auth", authRoutes);
 
+
+// ✅ TEST ROUTE
 app.get("/", (req, res) => {
-  res.send("Live Caption Pro Backend Running");
+  res.send("🚀 Live Caption Pro Backend Running");
 });
 
-// MongoDB connection
+
+// ✅ MONGODB CONNECTION
 console.log("Connecting to MongoDB...");
 
 mongoose.connect(process.env.MONGO_URI)
