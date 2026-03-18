@@ -7,6 +7,10 @@ router.post("/summary", async (req, res) => {
   try {
     const { text } = req.body;
 
+    if (!text) {
+      return res.json({ summary: "No text provided" });
+    }
+
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
@@ -26,13 +30,20 @@ router.post("/summary", async (req, res) => {
       }
     );
 
-    const summary = response.data.choices[0].message.content;
+    // ✅ SAFE ACCESS (NO CRASH)
+    const summary =
+      response.data?.choices?.[0]?.message?.content ||
+      "No summary generated";
 
     res.json({ summary });
 
   } catch (error) {
     console.error("AI ERROR:", error.response?.data || error.message);
-    res.status(500).json({ error: "AI summary failed" });
+
+    // ✅ FALLBACK (VERY IMPORTANT)
+    res.json({
+      summary: "AI failed, showing fallback summary",
+    });
   }
 });
 
