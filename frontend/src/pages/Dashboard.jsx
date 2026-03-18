@@ -51,30 +51,33 @@ function Dashboard() {
 
   // Generate summary
   const generateSummary = async (id, text) => {
-    setLoadingSummary(id);
+  setLoadingSummary(id);
 
-    try {
-      const res = await fetch("https://live-caption-pro.onrender.com/api/ai/summary", {
+  try {
+    const res = await fetch(
+      "https://live-caption-pro.onrender.com/api/ai/summary",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ text }),
-      });
+      }
+    );
 
-      const data = await res.json();
+    const data = await res.json();
 
-      setSummaries((prev) => ({
-        ...prev,
-        [id]: data.summary,
-      }));
-    } catch (error) {
-      console.error(error);
-    }
+    setSummaries((prev) => ({
+      ...prev,
+      [id]: data.summary,
+    }));
 
-    setLoadingSummary(null);
-  };
+  } catch (error) {
+    console.error("Summary error:", error);
+  }
 
+  setLoadingSummary(null);
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-800 p-10">
 
