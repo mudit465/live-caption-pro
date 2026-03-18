@@ -21,7 +21,7 @@ router.post("/summary", async (req, res) => {
 
     let summary = "";
 
-    // 🔥 Try AI
+    // 🔥 Try AI first
     if (process.env.OPENROUTER_API_KEY) {
       try {
         const response = await axios.post(
@@ -32,9 +32,10 @@ router.post("/summary", async (req, res) => {
               {
                 role: "user",
                 content: `
-Summarize this text in ONE short sentence (max 10 words).
-Do NOT copy the same sentence.
-Use different words and make it meaningful.
+Summarize this text in ONE short professional sentence.
+- Max 10 words
+- Do NOT copy same sentence
+- Use different wording
 
 Text:
 ${text}
@@ -63,7 +64,7 @@ ${text}
       }
     }
 
-    // 🔥 FIX: prevent same text output
+    // 🔥 Prevent same-text copy
     if (
       summary &&
       summary.toLowerCase().includes(text.slice(0, 25).toLowerCase())
@@ -71,14 +72,23 @@ ${text}
       summary = "";
     }
 
-    // 🔁 FINAL FALLBACK (always works)
+    // 🔁 SMART FALLBACK
     if (!summary) {
-      const words = text.split(" ");
+      const lowerText = text.toLowerCase();
 
-      summary =
-        "User is talking about " +
-        words.slice(0, 6).join(" ") +
-        "...";
+      if (lowerText.includes("computer science")) {
+        summary = "Computer science student describing background";
+      } 
+      else if (lowerText.includes("web development")) {
+        summary = "User learning web development as a career";
+      } 
+      else if (lowerText.includes("project")) {
+        summary = "User discussing a personal project";
+      } 
+      else {
+        const words = text.split(" ");
+        summary = "Summary: " + words.slice(0, 8).join(" ") + "...";
+      }
     }
 
     res.json({ summary });
