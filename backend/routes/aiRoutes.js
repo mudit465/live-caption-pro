@@ -12,6 +12,13 @@ router.post("/summary", async (req, res) => {
       return res.json({ summary: "No text provided" });
     }
 
+    // 🔥 Skip very short text (IMPORTANT)
+    if (text.split(" ").length < 6) {
+      return res.json({
+        summary: "Text too short to summarize",
+      });
+    }
+
     // ❌ No API key → fallback
     if (!process.env.OPENROUTER_API_KEY) {
       return res.json({
@@ -25,14 +32,19 @@ router.post("/summary", async (req, res) => {
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
-          model: "openai/gpt-3.5-turbo",
+          // ✅ FREE + WORKING MODEL
+          model: "mistralai/mistral-7b-instruct",
+
           messages: [
             {
               role: "user",
               content: `
-Summarize the following text into a short and clear sentence.
-Avoid repeating the same words.
-Make it more meaningful and professional.
+You are an AI summarizer.
+
+Your task:
+- Rewrite the text into a shorter, meaningful sentence
+- Do NOT repeat the same words
+- Make it sound natural and professional
 
 Text:
 ${text}
@@ -52,7 +64,7 @@ ${text}
 
       // ✅ Safe extraction
       summary =
-        response.data?.choices?.[0]?.message?.content || "";
+        response.data?.choices?.[0]?.message?.content?.trim() || "";
 
     } catch (apiError) {
       console.error(
