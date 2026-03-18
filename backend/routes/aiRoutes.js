@@ -12,7 +12,7 @@ router.post("/summary", async (req, res) => {
       return res.json({ summary: "No text provided" });
     }
 
-    // 🔥 Skip very short text (IMPORTANT)
+    // 🔥 Skip short text
     if (text.split(" ").length < 6) {
       return res.json({
         summary: "Text too short to summarize",
@@ -32,19 +32,21 @@ router.post("/summary", async (req, res) => {
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
-          // ✅ FREE + WORKING MODEL
+          // ✅ Free working model
           model: "mistralai/mistral-7b-instruct",
 
           messages: [
             {
               role: "user",
               content: `
-You are an AI summarizer.
+Rewrite the following text into ONE short professional sentence.
 
-Your task:
-- Rewrite the text into a shorter, meaningful sentence
-- Do NOT repeat the same words
-- Make it sound natural and professional
+STRICT RULES:
+- Do NOT copy the same sentence
+- Use different words
+- Make it shorter
+- Maximum 12 words
+- Output only the final sentence
 
 Text:
 ${text}
