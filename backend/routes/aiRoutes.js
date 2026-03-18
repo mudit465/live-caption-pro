@@ -7,42 +7,65 @@ router.post("/summary", async (req, res) => {
   try {
     const { text } = req.body;
 
-    if (!text) {
+    // ❌ No text
+    if (!text || text.trim() === "") {
       return res.json({ summary: "No text provided" });
     }
 
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "openai/gpt-3.5-turbo",
-        messages: [
-          {
-            role: "user",
-            content: `Summarize this in one short sentence: ${text}`,
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // ❌ No API key → fallback
+    if (!process.env.OPENROUTER_API_KEY) {
+      return res.json({
+        summary: text.split(" ").slice(0, 20).join(" ") + "...",
+      });
+    }
 
-    // ✅ SAFE ACCESS (NO CRASH)
-    const summary =
-      response.data?.choices?.[0]?.message?.content ||
-      "No summary generated";
+    let summary = "";
+
+    try {
+      const response = await axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model: "openai/gpt-3.5-turbo",
+          messages: [
+            {
+              role: "user",
+              content: `Summarize this in one short sentence: ${text}`,
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://bucolic-llama-bfb205.netlify.app",
+            "X-Title": "Live Caption Pro",
+          },
+        }
+      );
+
+      // ✅ Safe extraction
+      summary =
+        response.data?.choices?.[0]?.message?.content || "";
+
+    } catch (apiError) {
+      console.error(
+        "❌ AI API ERROR:",
+        apiError.response?.data || apiError.message
+      );
+    }
+
+    // 🔁 Fallback if AI fails
+    if (!summary) {
+      summary = text.split(" ").slice(0, 20).join(" ") + "...";
+    }
 
     res.json({ summary });
 
   } catch (error) {
-    console.error("AI ERROR:", error.response?.data || error.message);
+    console.error("🔥 FINAL ERROR:", error);
 
-    // ✅ FALLBACK (VERY IMPORTANT)
     res.json({
-      summary: "AI failed, showing fallback summary",
+      summary: "Something went wrong, fallback used",
     });
   }
 });
