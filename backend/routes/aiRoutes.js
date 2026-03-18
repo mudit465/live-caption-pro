@@ -29,7 +29,14 @@ router.post("/summary", async (req, res) => {
           messages: [
             {
               role: "user",
-              content: `Summarize this clearly and professionally in one short sentence: ${text}`,
+              content: `
+Summarize the following text into a short and clear sentence.
+Avoid repeating the same words.
+Make it more meaningful and professional.
+
+Text:
+${text}
+`,
             },
           ],
         },
