@@ -16,7 +16,7 @@ function Dashboard() {
       const payload = JSON.parse(atob(token.split(".")[1]));
 
       const res = await fetch(
-        `http://localhost:5000/api/transcripts?userId=${payload.id}`
+        `https://live-caption-pro.onrender.com/api/transcripts?userId=${payload.id}`
       );
 
       const data = await res.json();
@@ -35,7 +35,7 @@ function Dashboard() {
 
   // Delete
   const deleteTranscript = async (id) => {
-    await fetch(`http://localhost:5000/api/transcripts/${id}`, {
+    await fetch(`https://live-caption-pro.onrender.com/api/transcripts/${id}`, {
       method: "DELETE",
     });
     fetchTranscripts();
@@ -54,7 +54,7 @@ function Dashboard() {
     setLoadingSummary(id);
 
     try {
-      const res = await fetch("http://localhost:5000/api/ai/summary", {
+      const res = await fetch("https://live-caption-pro.onrender.com/api/ai/summary", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

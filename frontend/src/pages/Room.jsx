@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { io } from "socket.io-client";
 import { useParams } from "react-router-dom";
 
-const socket = io("http://localhost:5000");
+const socket = io("https://live-caption-pro.onrender.com");
 
 function Room() {
   const { roomId } = useParams();
@@ -109,7 +109,7 @@ function Room() {
 
       const payload = JSON.parse(atob(token.split(".")[1]));
 
-      await fetch("http://localhost:5000/api/transcripts/save", {
+      await fetch("https://live-caption-pro.onrender.com/api/transcripts/save", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
