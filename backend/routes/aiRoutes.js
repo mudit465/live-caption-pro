@@ -7,21 +7,14 @@ router.post("/summary", async (req, res) => {
   try {
     const { text } = req.body;
 
-    // ❌ No text
     if (!text || text.trim() === "") {
-      return res.json({ summary: "No text provided" });
-    }
-
-    // ❌ Too short
-    if (text.split(" ").length < 6) {
-      return res.json({
-        summary: "Text too short to summarize",
-      });
+      return res.json({ summary: "No text provided", points: [] });
     }
 
     let summary = "";
+    let points = [];
 
-    // 🔥 Try AI first
+    // 🔥 AI TRY
     if (process.env.OPENROUTER_API_KEY) {
       try {
         const response = await axios.post(
@@ -32,10 +25,16 @@ router.post("/summary", async (req, res) => {
               {
                 role: "user",
                 content: `
-Summarize this text in ONE short professional sentence.
-- Max 10 words
-- Do NOT copy same sentence
-- Use different wording
+Analyze this text and return:
+
+1. One short summary (max 10 words)
+2. 3 key bullet points
+
+Return in JSON format:
+{
+  "summary": "...",
+  "points": ["...", "...", "..."]
+}
 
 Text:
 ${text}
@@ -47,57 +46,44 @@ ${text}
             headers: {
               Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
               "Content-Type": "application/json",
-              "HTTP-Referer": "https://bucolic-llama-bfb205.netlify.app",
-              "X-Title": "Live Caption Pro",
             },
           }
         );
 
-        summary =
-          response.data?.choices?.[0]?.message?.content?.trim() || "";
+        const content =
+          response.data?.choices?.[0]?.message?.content || "";
 
-      } catch (apiError) {
-        console.error(
-          "❌ AI API ERROR:",
-          apiError.response?.data || apiError.message
-        );
+        try {
+          const parsed = JSON.parse(content);
+          summary = parsed.summary;
+          points = parsed.points;
+        } catch {
+          summary = "";
+        }
+
+      } catch (err) {
+        console.log("AI ERROR", err.message);
       }
     }
 
-    // 🔥 Prevent same-text copy
-    if (
-      summary &&
-      summary.toLowerCase().includes(text.slice(0, 25).toLowerCase())
-    ) {
-      summary = "";
-    }
-
-    // 🔁 SMART FALLBACK
+    // 🔁 FALLBACK
     if (!summary) {
-      const lowerText = text.toLowerCase();
+      const words = text.split(" ");
+      summary = "Discussion about " + words.slice(0, 6).join(" ");
 
-      if (lowerText.includes("computer science")) {
-        summary = "Computer science student describing background";
-      } 
-      else if (lowerText.includes("web development")) {
-        summary = "User learning web development as a career";
-      } 
-      else if (lowerText.includes("project")) {
-        summary = "User discussing a personal project";
-      } 
-      else {
-        const words = text.split(" ");
-        summary = "Summary: " + words.slice(0, 8).join(" ") + "...";
-      }
+      points = [
+        "User shared personal thoughts",
+        "Conversation about topic",
+        "General discussion captured",
+      ];
     }
 
-    res.json({ summary });
+    res.json({ summary, points });
 
   } catch (error) {
-    console.error("🔥 FINAL ERROR:", error);
-
     res.json({
-      summary: "Summary unavailable",
+      summary: "Error generating summary",
+      points: [],
     });
   }
 });
